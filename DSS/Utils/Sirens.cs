@@ -1,10 +1,10 @@
-﻿using Rage;
-using Rage.Native;
+﻿using GTA;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+using WithLithum.NativeWrapper;
 
 namespace DSS.Utils
 {
@@ -20,30 +20,30 @@ namespace DSS.Utils
                     break;
                 case SirenStage.One:
                     if (activeVeh.SoundSet == null)
-                        NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(Sound.NewSoundID(activeVeh), "VEHICLES_HORNS_SIREN_1", activeVeh.Vehicle, 0, 0, 0);
+                        Natives.PlaySoundFromEntity(Sound.NewSoundID(activeVeh), "VEHICLES_HORNS_SIREN_1", activeVeh.Vehicle.Handle, null, false, 0);
                     else
-                        NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(Sound.NewSoundID(activeVeh), activeVeh.SoundSet.SirenTones[0], activeVeh.Vehicle, 0, 0, 0);
+                        Natives.PlaySoundFromEntity(Sound.NewSoundID(activeVeh), activeVeh.SoundSet.SirenTones[0], activeVeh.Vehicle.Handle, null, false, 0);
                     break;
                 case SirenStage.Two:
                     if (activeVeh.SoundSet == null)
-                        NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(Sound.NewSoundID(activeVeh), "VEHICLES_HORNS_SIREN_2", activeVeh.Vehicle, 0, 0, 0);
+                        Natives.PlaySoundFromEntity(Sound.NewSoundID(activeVeh), "VEHICLES_HORNS_SIREN_2", activeVeh.Vehicle.Handle, null, false, 0);
                     else
-                        NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(Sound.NewSoundID(activeVeh), activeVeh.SoundSet.SirenTones[1], activeVeh.Vehicle, 0, 0, 0);
+                        Natives.PlaySoundFromEntity(Sound.NewSoundID(activeVeh), activeVeh.SoundSet.SirenTones[1], activeVeh.Vehicle.Handle, null, false, 0);
                     break;
                 case SirenStage.Warning:
                     if (activeVeh.SoundSet == null)
-                        NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(Sound.NewSoundID(activeVeh), "VEHICLES_HORNS_POLICE_WARNING", activeVeh.Vehicle, 0, 0, 0);
+                        Natives.PlaySoundFromEntity(Sound.NewSoundID(activeVeh), "VEHICLES_HORNS_POLICE_WARNING", activeVeh.Vehicle.Handle, null, false, 0);
                     else
-                        NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(Sound.NewSoundID(activeVeh), activeVeh.SoundSet.SirenTones[2], activeVeh.Vehicle, 0, 0, 0);
+                        Natives.PlaySoundFromEntity(Sound.NewSoundID(activeVeh), activeVeh.SoundSet.SirenTones[2], activeVeh.Vehicle.Handle, null, false, 0);
                     break;
                 case SirenStage.Warning2:
-                    NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(Sound.NewSoundID(activeVeh), activeVeh.SoundSet.SirenTones[3], activeVeh.Vehicle, 0, 0, 0);
+                    Natives.PlaySoundFromEntity(Sound.NewSoundID(activeVeh), activeVeh.SoundSet.SirenTones[3], activeVeh.Vehicle.Handle, null, false, 0);
                     break;
                 case SirenStage.Horn:
                     if (activeVeh.SoundSet == null)
-                        NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(Sound.NewSoundID(activeVeh), "SIRENS_AIRHORN", activeVeh.Vehicle, 0, 0, 0);
+                        Natives.PlaySoundFromEntity(Sound.NewSoundID(activeVeh), "SIRENS_AIRHORN", activeVeh.Vehicle.Handle, null, false, 0);
                     else
-                        NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(Sound.NewSoundID(activeVeh), activeVeh.SoundSet.Horn, activeVeh.Vehicle, 0, 0, 0);
+                        Natives.PlaySoundFromEntity(Sound.NewSoundID(activeVeh), activeVeh.SoundSet.Horn, activeVeh.Vehicle.Handle, null, false, 0);
                     break;
                 default:
                     break;
@@ -51,7 +51,7 @@ namespace DSS.Utils
         }
         public static void MoveUpStage(ManagedVehicle activeVeh)
         {
-            NativeFunction.Natives.PLAY_SOUND_FRONTEND(-1, Settings.SET_AUDIONAME, Settings.SET_AUDIOREF, true);
+            Natives.PlaySoundFrontend(-1, Settings.SET_AUDIONAME, Settings.SET_AUDIOREF, true);
             if (activeVeh.SoundSet == null)
                 activeVeh.SirenStage = defaultSirenStages.Next(activeVeh.SirenStage);
             else
@@ -60,7 +60,7 @@ namespace DSS.Utils
         }
         public static void MoveDownStage(ManagedVehicle activeVeh)
         {
-            NativeFunction.Natives.PLAY_SOUND_FRONTEND(-1, Settings.SET_AUDIONAME, Settings.SET_AUDIOREF, true);
+            Natives.PlaySoundFrontend(-1, Settings.SET_AUDIONAME, Settings.SET_AUDIOREF, true);
             if (activeVeh.SoundSet == null)
                 activeVeh.SirenStage = defaultSirenStages.Previous(activeVeh.SirenStage);
             else
@@ -82,23 +82,23 @@ namespace DSS.Utils
                     case 1:
                         activeVeh.AirManuID = Sound.TempSoundID();
                         if (activeVeh.SoundSet == null)
-                            NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(activeVeh.AirManuID, "SIRENS_AIRHORN", activeVeh.Vehicle, 0, 0, 0);
+                            Natives.PlaySoundFromEntity(activeVeh.AirManuID.Value, "SIRENS_AIRHORN", activeVeh.Vehicle.Handle, null, false, 0);
                         else
-                            NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(activeVeh.AirManuID, activeVeh.SoundSet.Horn, activeVeh.Vehicle, 0, 0, 0);
+                            Natives.PlaySoundFromEntity(activeVeh.AirManuID.Value, activeVeh.SoundSet.Horn, activeVeh.Vehicle.Handle, null, false, 0);
                         break;
                     case 2:
                         activeVeh.AirManuID = Sound.TempSoundID();
                         if (activeVeh.SoundSet == null)
-                            NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(activeVeh.AirManuID, "VEHICLES_HORNS_SIREN_1", activeVeh.Vehicle, 0, 0, 0);
+                            Natives.PlaySoundFromEntity(activeVeh.AirManuID.Value, "VEHICLES_HORNS_SIREN_1", activeVeh.Vehicle.Handle, null, false, 0);
                         else
-                            NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(activeVeh.AirManuID, activeVeh.SoundSet.SirenTones[0], activeVeh.Vehicle, 0, 0, 0);
+                            Natives.PlaySoundFromEntity(activeVeh.AirManuID.Value, activeVeh.SoundSet.SirenTones[0], activeVeh.Vehicle.Handle, null, false, 0);
                         break;
                     case 3:
                         activeVeh.AirManuID = Sound.TempSoundID();
                         if (activeVeh.SoundSet == null)
-                            NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(activeVeh.AirManuID, "VEHICLES_HORNS_SIREN_2", activeVeh.Vehicle, 0, 0, 0);
+                            Natives.PlaySoundFromEntity(activeVeh.AirManuID.Value, "VEHICLES_HORNS_SIREN_2", activeVeh.Vehicle.Handle, null, false, 0);
                         else
-                            NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(activeVeh.AirManuID, activeVeh.SoundSet.SirenTones[1], activeVeh.Vehicle, 0, 0, 0);
+                            Natives.PlaySoundFromEntity(activeVeh.AirManuID.Value, activeVeh.SoundSet.SirenTones[1], activeVeh.Vehicle.Handle, null, false, 0);
                         break;
                 }
 
@@ -106,11 +106,11 @@ namespace DSS.Utils
             }
         }
 
-        public static Dictionary<string, SoundSet> GetSirenSets()
+        public static Dictionary<int, SoundSet> GetSirenSets()
         {
             string path = @"Plugins\DSS\";
             _ = new SirenSet();
-            Dictionary<string, SoundSet> dictSirenSets = new Dictionary<string, SoundSet>();
+            var dictSirenSets = new Dictionary<int, SoundSet>();
             foreach (string file in Directory.EnumerateFiles(path, "*.xml"))
             {
                 try
@@ -139,14 +139,14 @@ namespace DSS.Utils
 
                         foreach (string vehicle in vehicles)
                         {
-                            dictSirenSets.Add(vehicle.ToLower(), sirenSet.SoundSet);
+                            dictSirenSets.Add(Game.GenerateHash(vehicle.ToLowerInvariant()),
+                                sirenSet.SoundSet);
                         }
                     }
                 }
                 catch (Exception e)
                 {
                     ("SIRENSET IMPORT ERROR (" + Path.GetFileNameWithoutExtension(file) + "): " + e.Message).ToLog();
-                    Game.LogTrivial("SIRENSET IMPORT ERROR (" + Path.GetFileNameWithoutExtension(file) + "): " + e.Message);
                 }
             }
 

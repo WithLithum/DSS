@@ -1,18 +1,18 @@
-﻿using Rage;
-using Rage.Native;
+﻿using GTA;
+using WithLithum.NativeWrapper;
 
 namespace DSS.Utils
 {
-    internal class Controls
+    internal static class Controls
     {
-        public static bool IsDisabledControlJustReleased(int padIndex, GameControl control)
+        public static bool IsDisabledControlJustReleased(int padIndex, Control control)
         {
-            return NativeFunction.Natives.IsDisabledControlJustReleased<bool>(padIndex, (int)control);
+            return Natives.IsDisabledControlJustReleased(padIndex, (int)control);
         }
 
-        public static bool IsDisabledControlPressed(int padIndex, GameControl control)
+        public static bool IsDisabledControlPressed(int padIndex, Control control)
         {
-            return NativeFunction.Natives.IsDisabledControlPressed<bool>(padIndex, (int)control);
+            return Natives.IsDisabledControlPressed(padIndex, (int)control);
         }
     }
 }

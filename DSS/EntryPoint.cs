@@ -1,58 +1,55 @@
-﻿using DSS.Threads;
+﻿using System;
+using DSS.Threads;
 using DSS.Utils;
-using Rage;
-using Rage.Attributes;
-using Rage.Native;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
+using GTA;
+using WithLithum.NativeWrapper;
 
-[assembly: Plugin("Dynamic Siren System", Description = "Lightweight Siren Control", Author = "TheMaybeast", PrefersSingleInstance = true, ShouldTickInPauseMenu = true, SupportUrl = "https://discord.gg/HUcXxkq")]
 namespace DSS
 {
-    internal class Entrypoint
+    public class Entrypoint : Script
     {
-        //Vehicles currently being managed by DSS
+        // Vehicles currently being managed by DSS
         public static List<ManagedVehicle> activeVehicles = new List<ManagedVehicle>();
-        //List of used Sound IDs
+        // List of used Sound IDs
         public static List<int> UsedSoundIDs = new List<int>();
         // List of Siren Sets
-        public static Dictionary<string, SoundSet> SirenSets = new Dictionary<string, SoundSet>();
+        public static Dictionary<int, SoundSet> SirenSets = new Dictionary<int, SoundSet>();
 
-        //If DSS is on Key Lock method
+        // If DSS is on Key Lock method
         public static bool keysLocked = false;
 
-        public static void Main()
+        public Entrypoint()
         {
             //Initiates Log File
             Log Log = new Log();
 
             // Checks if .ini file is created.
-            Settings.IniCheck();
-
-            //Version check and logging.
-            FileVersionInfo rphVer = FileVersionInfo.GetVersionInfo("ragepluginhook.exe");
-            Game.LogTrivial("Detected RPH " + rphVer.FileVersion);
-            if (rphVer.FileMinorPart < 78)
-            {
-                Game.LogTrivial("RPH 78+ is required to use this mod");
-                "ERROR: RPH 78+ is required but not found".ToLog();
-                Game.DisplayNotification($"~y~Unable to load DSS~w~\nRagePluginHook version ~b~78~w~ or later is required, you are on version ~b~{rphVer.FileMinorPart}");
-                return;
-            }
-            AssemblyName pluginInfo = Assembly.GetExecutingAssembly().GetName();
-            Game.LogTrivial($"LOADED DSS v{pluginInfo.Version}");
+            Utils.Settings.IniCheck();
 
             //Loads SirenSets
             SirenSets = Sirens.GetSirenSets();
 
             //Creates player controller
             "Loading: DSS - Player Controller".ToLog();
-            GameFiber.StartNew(delegate { PlayerController.MainLoop(); }, "DSS - Player Controller");
+            
+            Tick += OnTick;
+            Aborted += OnAborted;
+            
             "Loaded: DSS - Player Controller".ToLog();
         }
 
-        private static void OnUnload(bool isTerminating)
+        private void OnAborted(object sender, EventArgs e)
+        {
+            OnUnload();
+        }
+
+        private void OnTick(object sender, EventArgs e)
+        {
+            PlayerController.Tick();
+        }
+
+        private static void OnUnload()
         {
             "Unloading DSS".ToLog();
             if (UsedSoundIDs.Count > 0)
@@ -60,8 +57,8 @@ namespace DSS
                 "Unloading used SoundIDs".ToLog();
                 foreach (int id in UsedSoundIDs)
                 {
-                    NativeFunction.Natives.STOP_SOUND(id);
-                    NativeFunction.Natives.RELEASE_SOUND_ID(id);
+                    Natives.StopSound(id);
+                    Natives.ReleaseSoundId(id);
                     ("Unloaded SoundID " + id).ToLog();
                 }
                 "Unloaded all used SoundIDs".ToLog();
@@ -71,11 +68,12 @@ namespace DSS
                 "Refreshing vehicle's default EL".ToLog();
                 foreach (ManagedVehicle aVeh in activeVehicles)
                 {
-                    if (aVeh.Vehicle)
+                    if (aVeh.Vehicle.Ok())
                     {
-                        aVeh.Vehicle.IsSirenOn = false;
+                        aVeh.Vehicle.IsSirenActive = false;
                         aVeh.Vehicle.IsSirenSilent = false;
-                        aVeh.Vehicle.IndicatorLightsStatus = VehicleIndicatorLightsStatus.Off;
+                        aVeh.Vehicle.IsLeftIndicatorLightOn = false;
+                        aVeh.Vehicle.IsRightIndicatorLightOn = false;
                         ("Refreshed " + aVeh.Vehicle.Handle).ToLog();
                     }
                     else

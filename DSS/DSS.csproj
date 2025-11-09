@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DSS</RootNamespace>
     <AssemblyName>DSS</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
@@ -33,9 +33,11 @@
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="RagePluginHook, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\RagePluginHook.1.98.0\lib\net472\RagePluginHook.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="JetBrains.Annotations, Version=4242.42.42.42, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
+      <HintPath>..\packages\JetBrains.Annotations.2025.2.2\lib\net20\JetBrains.Annotations.dll</HintPath>
+    </Reference>
+    <Reference Include="ScriptHookVDotNet3, Version=3.6.0.0, Culture=neutral, processorArchitecture=Amd64">
+      <HintPath>..\packages\ScriptHookVDotNet3.3.6.0\lib\net48\ScriptHookVDotNet3.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -47,6 +49,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="WithLithum.NativeWrapper, Version=0.1.2.0, Culture=neutral, processorArchitecture=Amd64">
+      <HintPath>..\packages\WithLithum.NativeWrapper.0.1.2\lib\net48\WithLithum.NativeWrapper.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ManagedVehicle.cs" />
@@ -56,8 +61,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\Controls.cs" />
     <Compile Include="Utils\Extensions.cs" />
+    <Compile Include="Utils\Ini.cs" />
     <Compile Include="Utils\Lights.cs" />
     <Compile Include="Utils\Log.cs" />
+    <Compile Include="Utils\RGame.cs" />
     <Compile Include="Utils\Settings.cs" />
     <Compile Include="Utils\Sirens.cs" />
     <Compile Include="Utils\Sound.cs" />
@@ -65,6 +72,8 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Utils\Ini.cs.license" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

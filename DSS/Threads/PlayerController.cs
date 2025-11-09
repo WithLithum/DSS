@@ -1,210 +1,219 @@
 ﻿using DSS.Utils;
-using Rage;
-using Rage.Native;
+using GTA;
+using WithLithum.NativeWrapper;
 
 namespace DSS.Threads
 {
     class PlayerController
     {
-        private static Vehicle prevVehicle;
-        private static ManagedVehicle activeVehicle;
-        public static bool actv_manu;
-        public static bool actv_horn;
+        private static Vehicle _prevVehicle;
+        private static ManagedVehicle _activeVehicle;
+        private static bool _isManualActive;
+        private static bool _isHornActive;
 
-        internal static void MainLoop()
+        internal static void Tick()
         {
-            while (true)
+            Ped playerPed = Game.Player.Character;
+            if (!playerPed.IsSittingInVehicle()) return;
+            
+            Vehicle veh = playerPed.CurrentVehicle;
+            if (veh == null || veh.GetPedOnSeat(VehicleSeat.Driver) != playerPed) return;
+            // Below basic vehicle functionality will be available
+            // eg. Indicators and Internal Lights
+            
+            Game.DisableControlThisFrame((Control)Settings.CON_HZRD);
+            Game.DisableControlThisFrame((Control)Settings.CON_INDRIGHT);
+            Game.DisableControlThisFrame((Control)Settings.CON_INDLEFT);
+
+            // Registers new Vehicle
+            if (_activeVehicle == null || _prevVehicle != veh)
             {
-                Ped playerPed = Game.LocalPlayer.Character;
-                if (playerPed.IsInAnyVehicle(false))
+                _activeVehicle = veh.GetActiveVehicle();
+                _prevVehicle = veh;
+                veh.IsInteriorLightOn = false;
+            }
+
+            // Adds Brake Light Functionality
+            if (!_activeVehicle.Blackout && veh.IsStopped)
+                veh.AreBrakeLightsOn = true;
+                    
+            if (_activeVehicle.HasSiren)
+            {
+                Game.DisableControlThisFrame((Control)Settings.CON_TOGGLESIREN);
+                Game.DisableControlThisFrame((Control)Settings.CON_NEXTSIREN);
+                Game.DisableControlThisFrame((Control)Settings.CON_PREVSIREN);
+                Game.DisableControlThisFrame((Control)Settings.CON_AUXSIREN);
+                Game.DisableControlThisFrame((Control)Settings.CON_TOGGLELIGHTS);
+                Game.DisableControlThisFrame((Control)Settings.CON_INTLT);
+                Game.DisableControlThisFrame((Control)Settings.CON_HORN);
+
+                if (!Game.IsPaused)
                 {
-                    Vehicle veh = playerPed.CurrentVehicle;
-                    // Inside here basic vehicle functionality will be available
-                    // eg. Indicators and Internal Lights
-                    if (veh.GetPedOnSeat(-1) == playerPed)
+                    // Toggle lighting
+                    if (Game.IsControlJustReleased((Control)Settings.CON_TOGGLELIGHTS))
                     {
-                        Game.DisableControlAction(0, (GameControl)Settings.CON_HZRD, true);
-                        Game.DisableControlAction(0, (GameControl)Settings.CON_INDRIGHT, true);
-                        Game.DisableControlAction(0, (GameControl)Settings.CON_INDLEFT, true);
-
-                        // Registers new Vehicle
-                        if (activeVehicle == null || prevVehicle != veh)
+                        switch (veh.IsSirenActive)
                         {
-                            activeVehicle = veh.GetActiveVehicle();
-                            prevVehicle = veh;
-                            veh.IsInteriorLightOn = false;
-                        }
-
-                        // Adds Brake Light Functionality
-                        if (!activeVehicle.Blackout && NativeFunction.Natives.IS_VEHICLE_STOPPED<bool>(veh))
-                            NativeFunction.Natives.SET_VEHICLE_BRAKE_LIGHTS(veh, true);
-
-                        if (veh.HasSiren)
-                        {
-                            Game.DisableControlAction(0, (GameControl)Settings.CON_TOGGLESIREN, true);
-                            Game.DisableControlAction(0, (GameControl)Settings.CON_NEXTSIREN, true);
-                            Game.DisableControlAction(0, (GameControl)Settings.CON_PREVSIREN, true);
-                            Game.DisableControlAction(0, (GameControl)Settings.CON_AUXSIREN, true);
-                            Game.DisableControlAction(0, (GameControl)Settings.CON_TOGGLELIGHTS, true);
-                            Game.DisableControlAction(0, (GameControl)Settings.CON_INTLT, true);
-                            Game.DisableControlAction(0, (GameControl)Settings.CON_HORN, true);
-
-                            if (!Game.IsPaused)
-                            {
-                                // Toggle lighting
-                                if(Controls.IsDisabledControlJustReleased(0, (GameControl)Settings.CON_TOGGLELIGHTS))
-                                {
-                                    switch (veh.IsSirenOn)
-                                    {
-                                        case true:
-                                            NativeFunction.Natives.PLAY_SOUND_FRONTEND(-1, Settings.SET_AUDIONAME, Settings.SET_AUDIOREF, true);
-                                            activeVehicle.LightsOn = false;
-                                            veh.IsSirenOn = false;
-                                            activeVehicle.SirenStage = SirenStage.Off;
-                                            Sirens.Update(activeVehicle);
-                                            break;
-                                        case false:
-                                            NativeFunction.Natives.PLAY_SOUND_FRONTEND(-1, Settings.SET_AUDIONAME, Settings.SET_AUDIOREF, true);
-                                            activeVehicle.LightsOn = true;
-                                            veh.IsSirenOn = true;
-                                            veh.IsSirenSilent = true;
-                                            break;
-                                    }
-                                }
-
-                                // Toggle Aux Siren
-                                if(Controls.IsDisabledControlJustReleased(0, (GameControl)Settings.CON_AUXSIREN))
-                                {
-                                    if (activeVehicle.AuxOn)
-                                    {
-                                        Sound.ClearTempSoundID(activeVehicle.AuxID);
-                                        activeVehicle.AuxOn = false;
-                                    }
-                                    else
-                                    {
-                                        activeVehicle.AuxID = Sound.TempSoundID();
-                                        activeVehicle.AuxOn = true;
-                                        if (activeVehicle.SoundSet == null)
-                                            NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(activeVehicle.AuxID, "VEHICLES_HORNS_SIREN_1", activeVehicle.Vehicle, 0, 0, 0);
-                                        else
-                                            NativeFunction.Natives.PLAY_SOUND_FROM_ENTITY(activeVehicle.AuxID, activeVehicle.SoundSet.SirenTones[0], activeVehicle.Vehicle, 0, 0, 0);
-                                    }
-                                }
-
-                                // Siren Switches
-                                if(activeVehicle.LightsOn)
-                                {
-                                    if(Controls.IsDisabledControlJustReleased(0, (GameControl)Settings.CON_TOGGLESIREN))
-                                    {
-                                        NativeFunction.Natives.PLAY_SOUND_FRONTEND(-1, Settings.SET_AUDIONAME, Settings.SET_AUDIOREF, true);
-                                        if (activeVehicle.SirenStage == SirenStage.Off)
-                                            activeVehicle.SirenStage = SirenStage.One;
-                                        else
-                                            activeVehicle.SirenStage = SirenStage.Off;
-                                        Sirens.Update(activeVehicle);
-                                    }
-                                }
-                                if(activeVehicle.SirenStage > SirenStage.Off)
-                                {
-                                    // Move Up Siren Stage
-                                    if(Controls.IsDisabledControlJustReleased(0, (GameControl)Settings.CON_NEXTSIREN))
-                                        Sirens.MoveUpStage(activeVehicle);
-                                    // Move Down Siren Stage
-                                    if (Controls.IsDisabledControlJustReleased(0, (GameControl)Settings.CON_PREVSIREN))
-                                        Sirens.MoveDownStage(activeVehicle);
-                                }
-
-                                // Interior Light
-                                if (Controls.IsDisabledControlJustReleased(0, (GameControl)Settings.CON_INTLT))
-                                {
-                                    activeVehicle.InteriorLight = !activeVehicle.InteriorLight;
-                                    veh.IsInteriorLightOn = activeVehicle.InteriorLight;
-                                }
-
-                                // Manual                                                              
-                                if (activeVehicle.SirenStage == SirenStage.Off)
-                                {
-                                    if (Controls.IsDisabledControlPressed(0, (GameControl)Settings.CON_NEXTSIREN))
-                                        actv_manu = true;
-                                    else
-                                        actv_manu = false;
-                                }
-                                else
-                                    actv_manu = false;
-
-                                // Horn
-                                if (Controls.IsDisabledControlPressed(0, (GameControl)Settings.CON_HORN))
-                                    actv_horn = true;
-                                else
-                                    actv_horn = false;
-
-                                // Manage Horn and Manual siren
-                                int hman_state = 0;
-                                if (actv_horn && !actv_manu)
-                                    hman_state = 1;
-                                else if (!actv_horn && actv_manu)
-                                    hman_state = 2;
-                                else if (actv_horn && actv_manu)
-                                    hman_state = 3;
-
-                                Sirens.SetAirManuState(activeVehicle, hman_state);
-                            }
-                        }
-
-                        // Indicators
-                        if (!Game.IsPaused)
-                        {
-                            // Left Indicator
-                            if(Controls.IsDisabledControlJustReleased(0, (GameControl)Settings.CON_INDLEFT) && NativeFunction.Natives.xA571D46727E2B718<bool>(0))
-                            {
-                                if (activeVehicle.IndStatus == IndStatus.Left)
-                                {
-                                    activeVehicle.IndStatus = IndStatus.Off;
-                                    NativeFunction.Natives.PLAY_SOUND_FRONTEND(-1, Settings.SET_AUDIONAME, Settings.SET_AUDIOREF, true);
-                                }
-                                else
-                                {
-                                    activeVehicle.IndStatus = IndStatus.Left;
-                                    NativeFunction.Natives.PLAY_SOUND_FRONTEND(-1, Settings.SET_AUDIONAME, Settings.SET_AUDIOREF, true);
-                                }
-                                Lights.UpdateIndicator(activeVehicle);
-                            }
-
-                            // Right Indicator
-                            if (Controls.IsDisabledControlJustReleased(0, (GameControl)Settings.CON_INDRIGHT) && NativeFunction.Natives.xA571D46727E2B718<bool>(0))
-                            {
-                                if (activeVehicle.IndStatus == IndStatus.Right)
-                                {
-                                    activeVehicle.IndStatus = IndStatus.Off;
-                                    NativeFunction.Natives.PLAY_SOUND_FRONTEND(-1, Settings.SET_AUDIONAME, Settings.SET_AUDIOREF, true);
-                                }
-                                else
-                                {
-                                    activeVehicle.IndStatus = IndStatus.Right;
-                                    NativeFunction.Natives.PLAY_SOUND_FRONTEND(-1, Settings.SET_AUDIONAME, Settings.SET_AUDIOREF, true);
-                                }
-                                Lights.UpdateIndicator(activeVehicle);
-                            }
-
-                            // Hazards
-                            if (Controls.IsDisabledControlJustReleased(0, (GameControl)Settings.CON_HZRD) && NativeFunction.Natives.xA571D46727E2B718<bool>(0))
-                            {
-                                if (activeVehicle.IndStatus == IndStatus.Both)
-                                {
-                                    activeVehicle.IndStatus = IndStatus.Off;
-                                    NativeFunction.Natives.PLAY_SOUND_FRONTEND(-1, Settings.SET_AUDIONAME, Settings.SET_AUDIOREF, true);
-                                }
-                                else
-                                {
-                                    activeVehicle.IndStatus = IndStatus.Both;
-                                    NativeFunction.Natives.PLAY_SOUND_FRONTEND(-1, Settings.SET_AUDIONAME, Settings.SET_AUDIOREF, true);
-                                }
-                                Lights.UpdateIndicator(activeVehicle);
-                            }
+                            case true:
+                                Natives.PlaySoundFrontend(-1, Settings.SET_AUDIONAME,
+                                    Settings.SET_AUDIOREF, true);
+                                _activeVehicle.LightsOn = false;
+                                veh.IsSirenActive = false;
+                                _activeVehicle.SirenStage = SirenStage.Off;
+                                Sirens.Update(_activeVehicle);
+                                break;
+                            case false:
+                                Natives.PlaySoundFrontend(-1, Settings.SET_AUDIONAME,
+                                    Settings.SET_AUDIOREF, true);
+                                _activeVehicle.LightsOn = true;
+                                veh.IsSirenActive = true;
+                                veh.IsSirenSilent = true;
+                                break;
                         }
                     }
+
+                    // Toggle Aux Siren
+                    if (Game.IsControlJustReleased((Control)Settings.CON_AUXSIREN))
+                    {
+                        if (_activeVehicle.AuxOn)
+                        {
+                            Sound.ClearTempSoundID(_activeVehicle.AuxID);
+                            _activeVehicle.AuxOn = false;
+                        }
+                        else
+                        {
+                            _activeVehicle.AuxID = Sound.TempSoundID();
+                            _activeVehicle.AuxOn = true;
+                            
+                            Natives.PlaySoundFromEntity(_activeVehicle.AuxID,
+                                _activeVehicle.SoundSet == null
+                                    ? "VEHICLES_HORNS_SIREN_1"
+                                    : _activeVehicle.SoundSet.SirenTones[0], 
+                                _activeVehicle.Vehicle.Handle, null, false,
+                                0);
+                        }
+                    }
+
+                    // Siren Switches
+                    if (_activeVehicle.LightsOn)
+                    {
+                        if (Game.IsControlJustReleased((Control)Settings.CON_TOGGLESIREN))
+                        {
+                            Natives.PlaySoundFrontend(-1, Settings.SET_AUDIONAME,
+                                Settings.SET_AUDIOREF, true);
+                            _activeVehicle.SirenStage = _activeVehicle.SirenStage == SirenStage.Off 
+                                ? SirenStage.One
+                                : SirenStage.Off;
+                            
+                            Sirens.Update(_activeVehicle);
+                        }
+                    }
+
+                    if (_activeVehicle.SirenStage > SirenStage.Off)
+                    {
+                        // Move Up Siren Stage
+                        if (Game.IsControlJustReleased((Control)Settings.CON_NEXTSIREN))
+                            Sirens.MoveUpStage(_activeVehicle);
+                        // Move Down Siren Stage
+                        if (Game.IsControlJustReleased((Control)Settings.CON_PREVSIREN))
+                            Sirens.MoveDownStage(_activeVehicle);
+                    }
+
+                    // Interior Light
+                    if (Game.IsControlJustReleased((Control)Settings.CON_INTLT))
+                    {
+                        _activeVehicle.InteriorLight = !_activeVehicle.InteriorLight;
+                        veh.IsInteriorLightOn = _activeVehicle.InteriorLight;
+                    }
+
+                    // Manual                                                              
+                    _isManualActive = _activeVehicle.SirenStage == SirenStage.Off
+                                      && Game.IsControlPressed((Control)Settings.CON_NEXTSIREN);
+
+                    // Horn
+                    _isHornActive = Game.IsControlPressed((Control)Settings.CON_HORN);
+
+                    // Manage Horn and Manual siren
+                    var hornManualState = 0;
+                    switch (_isHornActive)
+                    {
+                        case true when !_isManualActive:
+                            hornManualState = 1;
+                            break;
+                        case false when _isManualActive:
+                            hornManualState = 2;
+                            break;
+                        case true when _isManualActive:
+                            hornManualState = 3;
+                            break;
+                    }
+
+                    Sirens.SetAirManuState(_activeVehicle, hornManualState);
                 }
-                GameFiber.Yield();
+            }
+
+            // Indicators
+            if (!Game.IsPaused)
+            {
+                // Left Indicator
+                if (Game.IsControlJustReleased((Control)Settings.CON_INDLEFT) &&
+                    Natives.IsUsingKeyboardAndMouse(0))
+                {
+                    if (_activeVehicle.IndStatus == IndStatus.Left)
+                    {
+                        _activeVehicle.IndStatus = IndStatus.Off;
+                        Natives.PlaySoundFrontend(-1, Settings.SET_AUDIONAME,
+                            Settings.SET_AUDIOREF, true);
+                    }
+                    else
+                    {
+                        _activeVehicle.IndStatus = IndStatus.Left;
+                        Natives.PlaySoundFrontend(-1, Settings.SET_AUDIONAME,
+                            Settings.SET_AUDIOREF, true);
+                    }
+
+                    Lights.UpdateIndicator(_activeVehicle);
+                }
+
+                // Right Indicator
+                if (Game.IsControlJustReleased((Control)Settings.CON_INDRIGHT) &&
+                    Natives.IsUsingKeyboardAndMouse(0))
+                {
+                    if (_activeVehicle.IndStatus == IndStatus.Right)
+                    {
+                        _activeVehicle.IndStatus = IndStatus.Off;
+                        Natives.PlaySoundFrontend(-1, Settings.SET_AUDIONAME,
+                            Settings.SET_AUDIOREF, true);
+                    }
+                    else
+                    {
+                        _activeVehicle.IndStatus = IndStatus.Right;
+                        Natives.PlaySoundFrontend(-1, Settings.SET_AUDIONAME,
+                            Settings.SET_AUDIOREF, true);
+                    }
+
+                    Lights.UpdateIndicator(_activeVehicle);
+                }
+
+                // Hazards
+                if (Game.IsControlJustReleased((Control)Settings.CON_HZRD) &&
+                    Natives.IsUsingKeyboardAndMouse(0))
+                {
+                    if (_activeVehicle.IndStatus == IndStatus.Both)
+                    {
+                        _activeVehicle.IndStatus = IndStatus.Off;
+                        Natives.PlaySoundFrontend(-1, Settings.SET_AUDIONAME,
+                            Settings.SET_AUDIOREF, true);
+                    }
+                    else
+                    {
+                        _activeVehicle.IndStatus = IndStatus.Both;
+                        Natives.PlaySoundFrontend(-1, Settings.SET_AUDIONAME,
+                            Settings.SET_AUDIOREF, true);
+                    }
+
+                    Lights.UpdateIndicator(_activeVehicle);
+                }
             }
         }
     }

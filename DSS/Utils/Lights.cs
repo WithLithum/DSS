@@ -1,4 +1,4 @@
-﻿using Rage.Native;
+﻿using WithLithum.NativeWrapper;
 
 namespace DSS.Utils
 {
@@ -9,20 +9,20 @@ namespace DSS.Utils
             switch (activeVeh.IndStatus)
             {
                 case IndStatus.Off:
-                    NativeFunction.Natives.SET_VEHICLE_INDICATOR_LIGHTS(activeVeh.Vehicle, 0, false);
-                    NativeFunction.Natives.SET_VEHICLE_INDICATOR_LIGHTS(activeVeh.Vehicle, 1, false);
+                    Natives.SetVehicleIndicatorLights(activeVeh.Vehicle.Handle, 0, false);
+                    Natives.SetVehicleIndicatorLights(activeVeh.Vehicle.Handle, 1, false);
                     break;
                 case IndStatus.Left:
-                    NativeFunction.Natives.SET_VEHICLE_INDICATOR_LIGHTS(activeVeh.Vehicle, 0, false);
-                    NativeFunction.Natives.SET_VEHICLE_INDICATOR_LIGHTS(activeVeh.Vehicle, 1, true);
+                    Natives.SetVehicleIndicatorLights(activeVeh.Vehicle.Handle, 0, false);
+                    Natives.SetVehicleIndicatorLights(activeVeh.Vehicle.Handle, 1, true);
                     break;
                 case IndStatus.Right:
-                    NativeFunction.Natives.SET_VEHICLE_INDICATOR_LIGHTS(activeVeh.Vehicle, 0, true);
-                    NativeFunction.Natives.SET_VEHICLE_INDICATOR_LIGHTS(activeVeh.Vehicle, 1, false);
+                    Natives.SetVehicleIndicatorLights(activeVeh.Vehicle.Handle, 0, true);
+                    Natives.SetVehicleIndicatorLights(activeVeh.Vehicle.Handle, 1, false);
                     break;
                 case IndStatus.Both:
-                    NativeFunction.Natives.SET_VEHICLE_INDICATOR_LIGHTS(activeVeh.Vehicle, 0, true);
-                    NativeFunction.Natives.SET_VEHICLE_INDICATOR_LIGHTS(activeVeh.Vehicle, 1, true);
+                    Natives.SetVehicleIndicatorLights(activeVeh.Vehicle.Handle, 0, true);
+                    Natives.SetVehicleIndicatorLights(activeVeh.Vehicle.Handle, 1, true);
                     break;
             }
         }

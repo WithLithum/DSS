@@ -1,10 +1,10 @@
-﻿using Rage;
+﻿using System.IO;
 
 namespace DSS.Utils
 {
     class Settings
     {
-        internal static InitializationFile INI = new InitializationFile(@"Plugins\DSS.ini");
+        internal static IniFile INI = new IniFile();
 
         // Controls
         public static int CON_TOGGLELIGHTS { get; } = INI.ReadInt32("Controls", "CON_TOGGLELIGHTS", 85);
@@ -24,8 +24,9 @@ namespace DSS.Utils
 
         internal static void IniCheck()
         {
-            if (INI.Exists())
+            if (File.Exists(@"Plugins\DSS.ini"))
             {
+                INI.Load(@"Plugins\DSS.ini");
                 "Loaded: DSS.ini".ToLog();
                 return;
             }

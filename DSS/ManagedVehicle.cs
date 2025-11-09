@@ -1,4 +1,5 @@
-﻿using Rage;
+﻿using GTA;
+using WithLithum.NativeWrapper;
 
 namespace DSS
 {
@@ -9,24 +10,26 @@ namespace DSS
             Vehicle = vehicle;
             LightsOn = lightsOn;
             SirenStage = SirenStage.Off;
+            HasSiren = Natives.GetEntityBoneIndexByName(vehicle.Handle, "siren1") != -1;
 
-            if (Entrypoint.SirenSets.ContainsKey(vehicle.Model.Name.ToLower()))
-                SoundSet = Entrypoint.SirenSets[vehicle.Model.Name.ToLower()];
-            else
-                SoundSet = null;
-
-            if (vehicle)
+            if (Entrypoint.SirenSets.TryGetValue(vehicle.Model.Hash, out var sirenSet))
             {
-                bool temp = vehicle.IsSirenOn;
-                vehicle.IsSirenOn = false;
-                vehicle.IsSirenOn = temp;
+                SoundSet = sirenSet;
+            }
+            
+            if (vehicle.Exists())
+            {
+                bool temp = vehicle.IsSirenActive;
+                vehicle.IsSirenActive = false;
+                vehicle.IsSirenActive = temp;
             }
         }
 
         // General
         public Vehicle Vehicle { get; set; }
         
-
+        public bool HasSiren { get; }
+        
         // Lights
         public bool LightsOn { get; set; } = false;
         public bool Blackout { get; set; } = false;

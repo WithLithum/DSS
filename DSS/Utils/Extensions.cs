@@ -1,7 +1,8 @@
-﻿using Rage;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using GTA;
 
 namespace DSS.Utils
 {
@@ -9,7 +10,7 @@ namespace DSS.Utils
     {
         internal static ManagedVehicle GetActiveVehicle(this Vehicle veh)
         {
-            if (!veh)
+            if (!veh.Ok())
                 return null;
             for (int i = 0; i < Entrypoint.activeVehicles.Count; i++)
             {
@@ -17,7 +18,7 @@ namespace DSS.Utils
                     return Entrypoint.activeVehicles[i];
             }
             ManagedVehicle aVeh;
-            if (veh.IsSirenOn)
+            if (veh.IsSirenActive)
                 aVeh = new ManagedVehicle(veh, true);
             else
                 aVeh = new ManagedVehicle(veh);
@@ -29,7 +30,7 @@ namespace DSS.Utils
             string path = @"Plugins/DSS.log";
             using (StreamWriter writer = new StreamWriter(path, true))
             {
-                writer.WriteLine("[" + DateTime.Now.ToString() + "] " + log);
+                writer.WriteLine("[" + DateTime.Now.ToString(CultureInfo.InvariantCulture) + "] " + log);
                 writer.Close();
             }
         }
